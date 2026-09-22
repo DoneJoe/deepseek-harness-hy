@@ -60,12 +60,14 @@ Now feed it something invalid:
     targets: 'not-an-array'
 ```
 
+Run again: the greetings are gone and the process exits with status 0 as if nothing happened — but the plugin never started. The schema runs before `apply`, and it produces this error:
+
 ```
 ValidationError: invalid config:
   - $.targets expected array but got not-an-array (at targets)
 ```
 
-The plugin's fiber goes to FAILED, and this tutorial's launcher exits with status 1 after printing the error. A plugin should also reject schema-valid config that names an unavailable resource or provider as soon as it can resolve that reference.
+The error is recorded through the Cordis logger service and the plugin's fiber goes to FAILED: a plugin never starts on incomplete config. You don't see the report in the terminal because this tutorial's launcher mounts no console exporter — it stays in the logger's in-memory buffer (see "Try breaking it" in [chapter 1](01-first-plugin.md) and [chapter 6](06-composition-and-hmr.md) for exporters and boot-time visibility). The loader isolates the failure to this entry: other plugins keep running, and the process still exits 0 when it has nothing left to do. A plugin should also reject schema-valid config that names an unavailable resource or provider as soon as it can resolve that reference.
 
 ## Computed config values
 

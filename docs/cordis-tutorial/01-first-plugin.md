@@ -86,9 +86,11 @@ export function apply(ctx: Context) {
 }
 ```
 
-Run again: the process dies with your error. A plugin that fails to load is a loud failure, not a skipped entry.
+Run again: nothing is printed and the process exits with status 0 — yet the failure is not swallowed. `Error: apply exploded` is recorded through the Cordis logger service, the plugin's fiber goes to FAILED, and the plugin never becomes ACTIVE. The loader isolates failures per entry: it neither skips the entry as if it had loaded nor crashes the process.
 
-One caveat worth knowing early: a config entry whose module cannot be **resolved** — a typo'd path or package name — is reported through the Cordis logger service instead of crashing the process, and at boot that report can be lost before a console exporter is watching. If a freshly added entry seems to do nothing, check the spelling first.
+So where did the report go? The logger service only writes to the exporters it is given, and this tutorial's launcher mounts no console exporter, so every report stays in an in-memory buffer. Even after you mount `@deepseek-ai/cordis-plugin-logger-console` through `cordis.yml` the way [chapter 6](06-composition-and-hmr.md) does, boot-time reports usually race ahead of the exporter's registration and are lost; only failures that happen once the exporter is watching (like the HMR reloads in chapter 6) reach the console.
+
+An entry whose module cannot be **resolved** — a typo'd path or package name — follows the same silent path: the error is recorded (into the same buffer), the entry never loads, and the process exits 0. If a freshly added entry seems to do nothing, check the spelling first.
 
 Next: [Lifecycle and effects](02-lifecycle-and-effects.md) — what happens when a plugin unloads.
 

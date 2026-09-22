@@ -60,12 +60,14 @@ Hello, beta!
     targets: 'not-an-array'
 ```
 
+再次运行：问候语消失了，进程以状态码 0 退出，一切看似正常——但插件并没有启动。schema 验证在 `apply` 之前执行，产生的错误是：
+
 ```
 ValidationError: invalid config:
   - $.targets expected array but got not-an-array (at targets)
 ```
 
-插件的 fiber 进入 FAILED 状态，本教程的启动器打印错误后以状态码 1 退出。如果某个插件的配置通过了 schema 验证，但其中指定的资源或提供方不可用，该插件也应当在能解析该引用时立即拒绝。
+错误经 Cordis logger 服务记录，插件的 fiber 进入 FAILED：插件绝不会在配置不完整时启动。只是本教程的启动器没有挂载控制台导出器，报告只留在 logger 的内存缓冲区里，终端中看不到它（导出器机制与启动期可见性见[第 1 章](01-first-plugin.zh.md)「尝试制造错误」一节与[第 6 章](06-composition-and-hmr.zh.md)）。loader 按配置项隔离失败：其余插件照常运行，进程在无事可做后以状态码 0 退出。如果某个插件的配置通过了 schema 验证，但其中指定的资源或提供方不可用，该插件也应当在能解析该引用时立即拒绝。
 
 ## 计算得到的配置值
 
